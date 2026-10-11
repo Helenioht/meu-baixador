@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meu Baixador de Vídeos</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f1f4f8;font-family:Arial,sans-serif}
+.card{width:min(94%,560px);background:#fff;padding:28px;border-radius:20px;box-shadow:0 12px 40px #0002}
+h1{text-align:center;margin:0 0 10px}.sub{text-align:center;color:#666;line-height:1.45}
+input{width:100%;padding:15px;margin:16px 0 10px;border:1px solid #ccd2d9;border-radius:11px;font-size:16px}
+button{width:100%;padding:15px;border:0;border-radius:11px;background:#1769e0;color:#fff;font-size:16px;font-weight:bold}
+button:disabled{opacity:.6}.status{text-align:center;margin-top:16px;min-height:24px}.download{display:block;text-decoration:none;text-align:center;margin-top:14px;padding:15px;border-radius:11px;background:#198754;color:white;font-weight:bold}
+small{display:block;color:#777;margin-top:18px;line-height:1.4}
+</style></head>
+<body><main class="card">
+<h1>🎬 Meu Baixador</h1>
+<p class="sub">Cole o endereço de um vídeo que você tenha permissão para baixar.</p>
+<input id="url" type="url" placeholder="https://..." autocomplete="off">
+<button id="go">Preparar download</button>
+<div id="status" class="status"></div><div id="result"></div>
+<small>Use somente para conteúdo que você tem direito de baixar. Alguns sites podem impedir downloads ou exigir autenticação.</small>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+$("go").onclick=async()=>{
+ const url=$("url").value.trim(); $("result").innerHTML="";
+ if(!url){$("status").textContent="Cole um link.";return}
+ try{new URL(url)}catch{$("status").textContent="Link inválido.";return}
+ $("go").disabled=true;$("status").textContent="Processando o vídeo…";
+ try{
+  const r=await fetch("/api/download",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url})});
+  const d=await r.json();
+  if(!r.ok) throw new Error(d.error||"Falha no processamento");
+  $("status").textContent="Pronto!";
+  $("result").innerHTML=`<a class="download" href="${d.download_url}">📥 Baixar ${d.filename||"vídeo"}</a>`;
+ }catch(e){$("status").textContent="Erro: "+e.message}
+ finally{$("go").disabled=false}
+};
+</script></body></html>
